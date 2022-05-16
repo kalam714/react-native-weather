@@ -1,20 +1,74 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import Weather from './components/Weather';
+import SearchBar from './components/SearchBar';
+
+
+const API_KEY="410e29e3e0756b2e8ac9ba3b6f1d69b7"
 
 export default function App() {
+
+  const [weatherData, setWeatherData] = useState(null);
+  const [loaded, setLoaded] = useState(true);
+
+  async function fetchWeatherData(cityName) {
+      setLoaded(false);
+      const API = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&appid=${API_KEY}`
+      try {
+          const response = await fetch(API);
+          if(response.status == 200) {
+              const data = await response.json();
+              setWeatherData(data);
+          } else {
+              setWeatherData(null);
+          }
+          setLoaded(true);
+          
+      } catch (error) {
+          console.log(error);
+      }
+  }
+
+  useEffect(() => {
+      fetchWeatherData('Dhaka');
+  }, [])
+  
+
+  if(!loaded) {
+      return (
+          <View style={styles.container}>
+              <ActivityIndicator color='gray'  size={36} />
+          </View>
+
+      )
+  }
+
+  else if(weatherData === null) {
+      return (
+          <View style={styles.container}>
+              <SearchBar fetchWeatherData={fetchWeatherData}/>
+              <Text style={styles.primaryText}>City Not Found! Try Different City</Text>
+          </View>
+      )
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+      <View style={styles.container}>
+          <Weather weatherData={weatherData} fetchWeatherData={fetchWeatherData}  />
+      </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+container: {
+  flex: 1,
+  backgroundColor: '#fff',
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+primaryText: {
+    margin: 20,
+    fontSize: 28
+}
 });
